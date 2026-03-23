@@ -1,0 +1,1056 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>EliteX Business Manager</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,-apple-system,sans-serif;background:#f5f6fa;color:#1a1a2e;font-size:14px}
+:root{--navy:#1F4E79;--blue:#2E75B6;--lblue:#D6E4F0;--llblue:#EBF3FB;--green:#1D6F42;--lgreen:#E2EFDA;--amber:#7d5a00;--lamber:#FFF2CC;--red:#843217;--lred:#FCE4D6;--gray:#595959;--lgray:#F2F2F2;--mgray:#e0e0e0;--white:#fff;--border:#e2e6ea}
+
+/* NAV */
+.app-header{background:var(--navy);color:#fff;padding:0 24px;display:flex;align-items:center;justify-content:space-between;height:52px;position:sticky;top:0;z-index:100}
+.app-logo{font-size:16px;font-weight:600;letter-spacing:.02em}
+.app-logo span{color:#7ab3d9;font-weight:400}
+.nav-tabs{display:flex;gap:2px}
+.nav-tab{background:transparent;border:none;color:rgba(255,255,255,.65);padding:8px 16px;cursor:pointer;font-size:13px;border-radius:6px;transition:all .15s}
+.nav-tab:hover{color:#fff;background:rgba(255,255,255,.1)}
+.nav-tab.active{color:#fff;background:rgba(255,255,255,.18);font-weight:500}
+.save-status{font-size:11px;color:rgba(255,255,255,.5)}
+
+/* LAYOUT */
+.page{display:none;padding:24px;max-width:1100px;margin:0 auto}
+.page.active{display:block}
+
+/* STAT CARDS */
+.stats-row{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:24px}
+.stat-card{background:#fff;border:0.5px solid var(--border);border-radius:10px;padding:14px 16px}
+.stat-label{font-size:11px;color:#888;margin-bottom:4px;text-transform:uppercase;letter-spacing:.04em}
+.stat-value{font-size:22px;font-weight:600;color:var(--navy)}
+.stat-sub{font-size:11px;color:#999;margin-top:2px}
+
+/* CARDS */
+.card{background:#fff;border:0.5px solid var(--border);border-radius:10px;padding:18px 20px;margin-bottom:16px}
+.card-title{font-size:14px;font-weight:600;color:var(--navy);margin-bottom:14px;display:flex;align-items:center;justify-content:space-between}
+
+/* FORM */
+.form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.form-group{display:flex;flex-direction:column;gap:5px}
+.form-group.full{grid-column:1/-1}
+.form-label{font-size:11px;font-weight:500;color:#666;text-transform:uppercase;letter-spacing:.04em}
+input,select,textarea{width:100%;padding:8px 10px;border:1px solid var(--mgray);border-radius:6px;font-size:13px;color:#1a1a2e;background:#fff;font-family:inherit}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--blue)}
+textarea{resize:vertical;min-height:64px}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:6px;font-size:13px;font-weight:500;cursor:pointer;border:1px solid var(--mgray);background:#fff;color:var(--navy);transition:all .15s}
+.btn:hover{background:var(--lgray)}
+.btn.primary{background:var(--navy);color:#fff;border-color:var(--navy)}
+.btn.primary:hover{background:#173d63}
+.btn.success{background:var(--green);color:#fff;border-color:var(--green)}
+.btn.danger{background:#C00000;color:#fff;border-color:#C00000}
+.btn.sm{padding:5px 10px;font-size:12px}
+.btn-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+
+/* SCORE BAR */
+.score-section{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:14px 0}
+.score-item{background:var(--lgray);border-radius:8px;padding:10px 12px}
+.score-item-label{font-size:11px;color:#666;margin-bottom:4px}
+.score-item-val{font-size:16px;font-weight:600;color:var(--navy);display:flex;align-items:baseline;gap:2px}
+.score-item-max{font-size:11px;color:#999}
+.score-bar-bg{height:3px;background:#ddd;border-radius:2px;margin-top:6px}
+.score-bar-fill{height:3px;border-radius:2px;transition:width .3s}
+
+/* VERDICT BOX */
+.verdict-box{border-radius:8px;padding:14px 16px;margin-top:14px}
+.verdict-label{font-size:18px;font-weight:700;margin-bottom:4px}
+.verdict-score{font-size:12px;margin-bottom:10px}
+.verdict-cols{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:10px}
+.verdict-col-title{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px}
+.verdict-item{font-size:12px;line-height:1.6;padding-left:10px;position:relative;margin-bottom:2px}
+.verdict-item::before{content:"";position:absolute;left:0;top:6px;width:4px;height:4px;border-radius:50%;background:currentColor}
+.tracker-output{background:rgba(0,0,0,.05);border-radius:6px;padding:10px 12px;font-family:monospace;font-size:11px;margin-top:10px;white-space:pre-wrap;word-break:break-word;line-height:1.7}
+
+/* PIPELINE TABLE */
+.pipeline-toolbar{display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap}
+.filter-select{padding:6px 10px;border:1px solid var(--mgray);border-radius:6px;font-size:12px;background:#fff;color:#1a1a2e}
+.pipeline-table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:12px}
+thead th{background:var(--navy);color:#fff;padding:9px 10px;text-align:left;font-weight:500;font-size:11px;white-space:nowrap}
+tbody tr{border-bottom:1px solid var(--border)}
+tbody tr:hover{background:var(--llblue)}
+tbody td{padding:8px 10px;vertical-align:middle}
+.status-pill{display:inline-block;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:600;white-space:nowrap}
+.s-research{background:#EBF3FB;color:#0C447C}
+.s-submitted{background:var(--lamber);color:var(--amber)}
+.s-won{background:var(--lgreen);color:var(--green)}
+.s-lost{background:var(--lred);color:var(--red)}
+.s-nobid{background:var(--lgray);color:var(--gray)}
+.days-red{color:#C00000;font-weight:700}
+.days-amber{color:#7d5a00;font-weight:700}
+.days-green{color:var(--green)}
+.margin-low{color:#C00000;font-weight:600}
+.margin-ok{color:var(--amber);font-weight:600}
+.margin-good{color:var(--green);font-weight:600}
+.empty-state{text-align:center;padding:40px 20px;color:#aaa;font-size:13px}
+
+/* ADD OPP FORM */
+.add-opp-section{background:var(--llblue);border:1px solid var(--lblue);border-radius:10px;padding:18px 20px;margin-bottom:20px}
+.add-opp-title{font-size:13px;font-weight:600;color:var(--navy);margin-bottom:14px}
+
+/* REVENUE */
+.revenue-goal{background:var(--navy);color:#fff;border-radius:10px;padding:18px 20px;margin-bottom:16px}
+.goal-row{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
+.goal-nums{display:flex;gap:24px;flex-wrap:wrap}
+.goal-stat{text-align:center}
+.goal-num{font-size:22px;font-weight:700}
+.goal-lbl{font-size:10px;color:rgba(255,255,255,.6);margin-top:2px}
+.progress-wrap{margin-top:12px}
+.progress-label{display:flex;justify-content:space-between;font-size:11px;color:rgba(255,255,255,.7);margin-bottom:6px}
+.progress-bg{height:10px;background:rgba(255,255,255,.2);border-radius:5px}
+.progress-fill{height:10px;background:#7ab3d9;border-radius:5px;transition:width .5s}
+.month-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.month-card{background:#fff;border:1px solid var(--border);border-radius:8px;padding:10px 12px}
+.month-name{font-size:11px;font-weight:600;color:#666;margin-bottom:6px}
+.month-revenue{font-size:16px;font-weight:700;color:var(--navy)}
+.month-input{width:100%;padding:4px 6px;border:1px solid var(--mgray);border-radius:4px;font-size:13px;margin-top:4px}
+
+/* WIN LOSS */
+.wl-row{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-bottom:16px}
+.wl-stat{background:#fff;border:1px solid var(--border);border-radius:8px;padding:12px;text-align:center}
+.wl-num{font-size:20px;font-weight:700;color:var(--navy)}
+.wl-lbl{font-size:10px;color:#999;margin-top:2px}
+
+/* TOAST */
+.toast{position:fixed;bottom:20px;right:20px;background:var(--green);color:#fff;padding:10px 16px;border-radius:8px;font-size:13px;font-weight:500;z-index:9999;opacity:0;transition:opacity .3s;pointer-events:none}
+.toast.show{opacity:1}
+
+.section-divider{border:none;border-top:1px solid var(--border);margin:20px 0}
+
+/* WEEKLY PLANNER */
+.week-header{background:var(--navy);color:#fff;border-radius:10px;padding:16px 20px;margin-bottom:16px}
+.week-title-row{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:10px}
+.week-title{font-size:15px;font-weight:600}
+.week-sub{font-size:11px;color:rgba(255,255,255,.6);margin-top:2px}
+.week-stats{display:flex;gap:16px;flex-wrap:wrap}
+.wk-stat{text-align:center}
+.wk-num{font-size:18px;font-weight:700}
+.wk-lbl{font-size:10px;color:rgba(255,255,255,.55);margin-top:1px}
+.week-prog-bg{height:6px;background:rgba(255,255,255,.2);border-radius:3px;margin-top:10px}
+.week-prog-fill{height:6px;background:#7ab3d9;border-radius:3px;transition:width .4s}
+.day-section{margin-bottom:14px}
+.day-label-row{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.day-name{font-size:13px;font-weight:600;color:var(--navy)}
+.day-hrs-badge{font-size:10px;color:#888;background:var(--lgray);padding:2px 8px;border-radius:20px}
+.day-focus-badge{font-size:10px;color:#0C447C;background:#EBF3FB;padding:2px 8px;border-radius:20px;font-style:italic}
+.wk-task{display:flex;align-items:flex-start;gap:10px;background:#fff;border:0.5px solid var(--border);border-radius:8px;padding:10px 12px;margin-bottom:6px;cursor:pointer;transition:all .15s}
+.wk-task:hover{border-color:#b0c4de}
+.wk-task.done{opacity:.45}
+.wk-task.done .wk-task-title{text-decoration:line-through;color:#aaa}
+.wk-cb{width:18px;height:18px;min-width:18px;border-radius:4px;border:1.5px solid #ccc;display:flex;align-items:center;justify-content:center;margin-top:1px;transition:all .15s;flex-shrink:0}
+.wk-cb.on{background:#1D6F42;border-color:#1D6F42}
+.wk-task-body{flex:1;min-width:0}
+.wk-task-title{font-size:13px;color:var(--navy);line-height:1.4;margin-bottom:2px}
+.wk-task-detail{font-size:11px;color:#888;line-height:1.5}
+.wk-task-meta{display:flex;gap:6px;margin-top:5px;flex-wrap:wrap;align-items:center}
+.wk-tag{font-size:10px;font-weight:500;padding:1px 7px;border-radius:10px}
+.tag-setup{background:#EBF3FB;color:#0C447C}
+.tag-bid{background:#E1F5EE;color:#085041}
+.tag-admin{background:#FFF2CC;color:#7d5a00}
+.tag-cert{background:#EEEDFE;color:#3C3489}
+.tag-hot{background:#FCE4D6;color:#843217}
+.wk-hrs{font-size:10px;color:#aaa;background:var(--lgray);padding:1px 6px;border-radius:10px}
+.wk-delete{font-size:11px;color:#ccc;background:none;border:none;cursor:pointer;padding:2px 4px;margin-left:auto;flex-shrink:0}
+.wk-delete:hover{color:#C00000}
+.add-task-row{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap}
+.add-task-row input{flex:1;min-width:160px;padding:7px 10px;border:1px solid var(--mgray);border-radius:6px;font-size:12px}
+.add-task-row select{padding:7px 8px;border:1px solid var(--mgray);border-radius:6px;font-size:12px;background:#fff}
+.add-task-row button{padding:7px 14px;border-radius:6px;font-size:12px;font-weight:500;cursor:pointer;border:1px solid var(--mgray);background:#fff;color:var(--navy)}
+.add-task-row button:hover{background:var(--lgray)}
+.week-history{margin-top:6px}
+.hist-row{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:#fff;border:0.5px solid var(--border);border-radius:8px;margin-bottom:6px;font-size:12px}
+.hist-week{font-weight:500;color:var(--navy)}
+.hist-stats{color:#888;font-size:11px}
+.hist-bar{height:4px;background:var(--lgray);border-radius:2px;width:80px;margin:0 10px}
+.hist-fill{height:4px;background:#2E75B6;border-radius:2px}
+
+</style>
+
+<div class="app-header">
+  <div class="app-logo">EliteX <span>Business Manager</span></div>
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="showPage('dashboard')">Dashboard</button>
+    <button class="nav-tab" onclick="showPage('screener')">Screener</button>
+    <button class="nav-tab" onclick="showPage('pipeline')">Pipeline</button>
+    <button class="nav-tab" onclick="showPage('revenue')">Revenue</button>
+    <button class="nav-tab" onclick="showPage('winloss')">Win / Loss</button>
+    <button class="nav-tab" onclick="showPage('weekly')">Weekly Plan</button>
+  </div>
+  <div class="save-status" id="save-status">Auto-saving</div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- DASHBOARD -->
+<div class="page active" id="page-dashboard">
+  <div class="stats-row">
+    <div class="stat-card">
+      <div class="stat-label">Active opportunities</div>
+      <div class="stat-value" id="d-active">0</div>
+      <div class="stat-sub">in pipeline</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Bids submitted</div>
+      <div class="stat-value" id="d-submitted">0</div>
+      <div class="stat-sub">awaiting decision</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Revenue won</div>
+      <div class="stat-value" id="d-revenue">$0</div>
+      <div class="stat-sub">of $50,000 goal</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Win rate</div>
+      <div class="stat-value" id="d-winrate">—</div>
+      <div class="stat-sub">all-time</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Due this week <span style="font-size:12px;font-weight:400;color:#888">upcoming deadlines</span></div>
+    <div id="due-soon-list"><div class="empty-state">No upcoming deadlines — add opportunities in the Pipeline tab.</div></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Quick actions</div>
+    <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px">
+      <button class="btn" onclick="showPage('screener')">+ Screen new opportunity</button>
+      <button class="btn" onclick="showPage('pipeline');setTimeout(()=>document.getElementById('add-form').scrollIntoView({behavior:'smooth'}),100)">+ Add to pipeline</button>
+      <button class="btn" onclick="sendPrompt('I need help writing a government contract proposal for EliteX. Here are the details:')">Draft a proposal ↗</button>
+    </div>
+  </div>
+</div>
+
+<!-- SCREENER -->
+<div class="page" id="page-screener">
+  <div class="card">
+    <div class="card-title">
+      Opportunity screener
+      <span style="font-size:22px;font-weight:700;color:var(--navy)" id="total-score">—<span style="font-size:12px;font-weight:400;color:#999">/100</span></span>
+    </div>
+    <div class="form-grid">
+      <div class="form-group">
+        <div class="form-label">Portal / Agency</div>
+        <select id="s-portal" onchange="runScore()">
+          <option value="">Select portal...</option>
+          <option value="pha">PHA</option>
+          <option value="phlcontracts">PHLContracts</option>
+          <option value="schooldistrict">School District of Philadelphia</option>
+          <option value="paemarketplace">PA eMarketplace</option>
+          <option value="samgov">SAM.gov (Federal)</option>
+          <option value="econtract">eContract Philly</option>
+          <option value="other">Other</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <div class="form-label">Category</div>
+        <select id="s-cat" onchange="runScore()">
+          <option value="">Select category...</option>
+          <option value="janitsupplies">Janitorial Supplies (products)</option>
+          <option value="uniforms">Uniforms & Safety Apparel</option>
+          <option value="janitservice">Janitorial Services (recurring)</option>
+          <option value="mro">MRO / Facilities Supplies</option>
+          <option value="maintenance">Light Maintenance</option>
+          <option value="other">Other</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <div class="form-label">Estimated Value ($)</div>
+        <input type="number" id="s-value" placeholder="e.g. 6200" oninput="runScore()"/>
+      </div>
+      <div class="form-group">
+        <div class="form-label">Days Until Due</div>
+        <input type="number" id="s-days" placeholder="e.g. 7" oninput="runScore()"/>
+      </div>
+      <div class="form-group">
+        <div class="form-label">Bond / Insurance Required?</div>
+        <select id="s-bond" onchange="runScore()">
+          <option value="">Not sure yet</option>
+          <option value="no">No bond / standard COI only</option>
+          <option value="coi">COI required (I have this)</option>
+          <option value="bond">Performance bond required</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <div class="form-label">Set-aside Type</div>
+        <select id="s-setaside" onchange="runScore()">
+          <option value="open">Open competition</option>
+          <option value="mwbe">MWBE / SDB set-aside</option>
+          <option value="small">Small business set-aside</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <div class="form-label">Can you source this?</div>
+        <select id="s-source" onchange="runScore()">
+          <option value="">Select...</option>
+          <option value="yes">Yes — supplier confirmed</option>
+          <option value="likely">Likely — can find quickly</option>
+          <option value="unsure">Unsure — need to research</option>
+          <option value="no">No — outside my categories</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <div class="form-label">Estimated Margin</div>
+        <select id="s-margin" onchange="runScore()">
+          <option value="">Unknown yet</option>
+          <option value="high">20%+ (strong)</option>
+          <option value="good">15–20% (good)</option>
+          <option value="low">10–15% (thin)</option>
+          <option value="poor">Under 10% (not viable)</option>
+        </select>
+      </div>
+      <div class="form-group full">
+        <div class="form-label">Solicitation title / details (optional)</div>
+        <textarea id="s-details" placeholder="Paste title, description, or any details from the posting..." oninput="runScore()"></textarea>
+      </div>
+    </div>
+
+    <div class="score-section" id="score-section">
+      <div class="score-item"><div class="score-item-label">Portal priority</div><div class="score-item-val"><span id="sc-portal">—</span><span class="score-item-max">/20</span></div><div class="score-bar-bg"><div class="score-bar-fill" id="sb-portal" style="width:0%"></div></div></div>
+      <div class="score-item"><div class="score-item-label">Contract value</div><div class="score-item-val"><span id="sc-value">—</span><span class="score-item-max">/20</span></div><div class="score-bar-bg"><div class="score-bar-fill" id="sb-value" style="width:0%"></div></div></div>
+      <div class="score-item"><div class="score-item-label">Category fit</div><div class="score-item-val"><span id="sc-cat">—</span><span class="score-item-max">/20</span></div><div class="score-bar-bg"><div class="score-bar-fill" id="sb-cat" style="width:0%"></div></div></div>
+      <div class="score-item"><div class="score-item-label">Margin potential</div><div class="score-item-val"><span id="sc-margin">—</span><span class="score-item-max">/20</span></div><div class="score-bar-bg"><div class="score-bar-fill" id="sb-margin" style="width:0%"></div></div></div>
+      <div class="score-item"><div class="score-item-label">Timeline & feasibility</div><div class="score-item-val"><span id="sc-time">—</span><span class="score-item-max">/20</span></div><div class="score-bar-bg"><div class="score-bar-fill" id="sb-time" style="width:0%"></div></div></div>
+      <div class="score-item"><div class="score-item-label">Set-aside advantage</div><div class="score-item-val"><span id="sc-set">—</span><span class="score-item-max">bonus</span></div><div class="score-bar-bg"><div class="score-bar-fill" id="sb-set" style="width:0%"></div></div></div>
+    </div>
+
+    <div id="verdict-box" style="display:none" class="verdict-box">
+      <div class="verdict-label" id="v-label"></div>
+      <div class="verdict-score" id="v-score"></div>
+      <div class="verdict-cols">
+        <div><div class="verdict-col-title" id="v-pro-title"></div><div id="v-pros"></div></div>
+        <div><div class="verdict-col-title" id="v-con-title"></div><div id="v-cons"></div></div>
+      </div>
+      <div class="tracker-output" id="v-tracker"></div>
+      <div class="btn-row" id="v-actions"></div>
+    </div>
+  </div>
+</div>
+
+<!-- PIPELINE -->
+<div class="page" id="page-pipeline">
+  <div class="add-opp-section" id="add-form">
+    <div class="add-opp-title">Add opportunity to pipeline</div>
+    <div class="form-grid">
+      <div class="form-group"><div class="form-label">Solicitation #</div><input id="p-num" placeholder="e.g. PHA-2025-004"/></div>
+      <div class="form-group"><div class="form-label">Portal / Agency</div>
+        <select id="p-portal">
+          <option value="PHA">PHA</option>
+          <option value="PHLContracts">PHLContracts</option>
+          <option value="School District">School District</option>
+          <option value="PA eMarketplace">PA eMarketplace</option>
+          <option value="SAM.gov">SAM.gov Federal</option>
+          <option value="eContract Philly">eContract Philly</option>
+          <option value="Other">Other</option>
+        </select>
+      </div>
+      <div class="form-group full"><div class="form-label">Description</div><input id="p-desc" placeholder="e.g. Janitorial supplies for Building Maintenance Division"/></div>
+      <div class="form-group"><div class="form-label">Category</div>
+        <select id="p-cat">
+          <option>Janitorial Supplies</option>
+          <option>Uniforms & Apparel</option>
+          <option>Janitorial Services</option>
+          <option>MRO / Facilities</option>
+          <option>Light Maintenance</option>
+          <option>Other</option>
+        </select>
+      </div>
+      <div class="form-group"><div class="form-label">Est. Value ($)</div><input type="number" id="p-val" placeholder="e.g. 6200"/></div>
+      <div class="form-group"><div class="form-label">Due Date</div><input type="date" id="p-due"/></div>
+      <div class="form-group"><div class="form-label">Status</div>
+        <select id="p-status">
+          <option>To Research</option>
+          <option>Researching</option>
+          <option>Bid Submitted</option>
+          <option>Won</option>
+          <option>Lost</option>
+          <option>No Bid</option>
+        </select>
+      </div>
+      <div class="form-group"><div class="form-label">Our Cost ($)</div><input type="number" id="p-cost" placeholder="supplier cost"/></div>
+      <div class="form-group"><div class="form-label">Our Bid ($)</div><input type="number" id="p-bid" placeholder="what we charge"/></div>
+      <div class="form-group"><div class="form-label">CO Name / Email</div><input id="p-co" placeholder="e.g. James Carter / jcarter@pha.gov"/></div>
+      <div class="form-group full"><div class="form-label">Notes</div><input id="p-notes" placeholder="Any special requirements, supplier notes, etc."/></div>
+    </div>
+    <div class="btn-row">
+      <button class="btn primary" onclick="addOpp()">Add to pipeline</button>
+      <button class="btn" onclick="clearPipelineForm()">Clear</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">
+      Pipeline
+      <div style="display:flex;gap:8px;align-items:center">
+        <select class="filter-select" id="filter-status" onchange="renderPipeline()">
+          <option value="">All statuses</option>
+          <option>To Research</option><option>Researching</option>
+          <option>Bid Submitted</option><option>Won</option>
+          <option>Lost</option><option>No Bid</option>
+        </select>
+        <select class="filter-select" id="filter-portal" onchange="renderPipeline()">
+          <option value="">All portals</option>
+          <option>PHA</option><option>PHLContracts</option>
+          <option>School District</option><option>PA eMarketplace</option>
+          <option>SAM.gov</option><option>eContract Philly</option>
+        </select>
+      </div>
+    </div>
+    <div class="pipeline-table-wrap">
+      <table>
+        <thead><tr>
+          <th>Opp #</th><th>Portal</th><th>Description</th><th>Category</th>
+          <th>Value</th><th>Due</th><th>Days</th><th>Status</th>
+          <th>Cost</th><th>Bid</th><th>Margin</th><th>CO</th><th>Notes</th><th></th>
+        </tr></thead>
+        <tbody id="pipeline-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- REVENUE -->
+<div class="page" id="page-revenue">
+  <div class="revenue-goal">
+    <div class="goal-row">
+      <div>
+        <div style="font-size:13px;color:rgba(255,255,255,.7);margin-bottom:4px">2025 revenue goal</div>
+        <div style="font-size:28px;font-weight:700">$50,000</div>
+      </div>
+      <div class="goal-nums">
+        <div class="goal-stat"><div class="goal-num" id="rev-total">$0</div><div class="goal-lbl">Earned to date</div></div>
+        <div class="goal-stat"><div class="goal-num" id="rev-remaining">$50,000</div><div class="goal-lbl">Remaining</div></div>
+        <div class="goal-stat"><div class="goal-num" id="rev-pct">0%</div><div class="goal-lbl">Of goal</div></div>
+        <div class="goal-stat"><div class="goal-num" id="rev-track">—</div><div class="goal-lbl">On track?</div></div>
+      </div>
+    </div>
+    <div class="progress-wrap">
+      <div class="progress-label"><span id="prog-label">$0 of $50,000</span><span id="prog-pct">0%</span></div>
+      <div class="progress-bg"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Monthly revenue — click a month to enter revenue</div>
+    <div class="month-grid" id="month-grid"></div>
+  </div>
+</div>
+
+<!-- WIN/LOSS -->
+<div class="page" id="page-winloss">
+  <div class="wl-row">
+    <div class="wl-stat"><div class="wl-num" id="wl-total">0</div><div class="wl-lbl">Total bids</div></div>
+    <div class="wl-stat"><div class="wl-num" id="wl-wins" style="color:var(--green)">0</div><div class="wl-lbl">Wins</div></div>
+    <div class="wl-stat"><div class="wl-num" id="wl-losses" style="color:#C00000">0</div><div class="wl-lbl">Losses</div></div>
+    <div class="wl-stat"><div class="wl-num" id="wl-rate">—</div><div class="wl-lbl">Win rate</div></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Win / Loss log <span style="font-size:12px;font-weight:400;color:#888">auto-updated from pipeline</span></div>
+    <div class="pipeline-table-wrap">
+      <table>
+        <thead><tr>
+          <th>Portal</th><th>Description</th><th>Category</th><th>Outcome</th>
+          <th>Bid ($)</th><th>Margin</th><th>CO Contact</th><th>Notes</th>
+        </tr></thead>
+        <tbody id="wl-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- WEEKLY PLANNER -->
+<div class="page" id="page-weekly">
+</div>
+
+<script>
+const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+const PORTAL_LABELS = {pha:'PHA',phlcontracts:'PHLContracts',schooldistrict:'School District',paemarketplace:'PA eMarketplace',samgov:'SAM.gov Federal',econtract:'eContract Philly',other:'Other'};
+const CAT_LABELS = {janitsupplies:'Janitorial Supplies',uniforms:'Uniforms & Apparel',janitservice:'Janitorial Services',mro:'MRO / Facilities',maintenance:'Light Maintenance',other:'Other'};
+
+let state = { opps: [], revenue: {}, nextId: 1 };
+
+async function loadState() {
+  try {
+    const r = await window.storage.get('elitex-state');
+    if (r && r.value) { state = JSON.parse(r.value); }
+  } catch(e) {}
+  renderAll();
+}
+
+async function saveState() {
+  try {
+    await window.storage.set('elitex-state', JSON.stringify(state));
+    const s = document.getElementById('save-status');
+    s.textContent = 'Saved ' + new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+  } catch(e) {}
+}
+
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('page-' + id).classList.add('active');
+  document.querySelectorAll('.nav-tab').forEach(t => {
+    if (t.textContent.toLowerCase().includes(id === 'winloss' ? 'win' : id === 'weekly' ? 'weekly' : id)) t.classList.add('active');
+  });
+  if (id === 'dashboard') renderDashboard();
+  if (id === 'pipeline') renderPipeline();
+  if (id === 'revenue') renderRevenue();
+  if (id === 'winloss') renderWinLoss();
+  if (id === 'weekly') renderWeekly();
+}
+
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+function $ (id) { return document.getElementById(id); }
+function fmtMoney(v) { return v ? '$' + Math.round(v).toLocaleString() : '—'; }
+function daysLeft(dateStr) {
+  if (!dateStr) return null;
+  const diff = Math.ceil((new Date(dateStr) - new Date()) / 86400000);
+  return diff;
+}
+
+// ── SCREENER ──────────────────────────────────────────────────────────────
+
+function runScore() {
+  const portal = $('s-portal').value;
+  const cat = $('s-cat').value;
+  const val = parseFloat($('s-value').value) || 0;
+  const days = parseFloat($('s-days').value) || 0;
+  const bond = $('s-bond').value;
+  const setaside = $('s-setaside').value;
+  const source = $('s-source').value;
+  const margin = $('s-margin').value;
+  const details = $('s-details').value;
+
+  let sP=0,sV=0,sC=0,sM=0,sT=0,sS=0;
+  let pros=[],cons=[],flags=[];
+
+  const pm = {pha:20,phlcontracts:20,schooldistrict:17,paemarketplace:15,samgov:10,econtract:8,other:10};
+  sP = portal ? (pm[portal]||10) : 0;
+  if (portal==='pha'||portal==='phlcontracts') pros.push('Top-priority portal for EliteX');
+  if (portal==='samgov') cons.push('Federal — more competition, target Q2');
+  if (portal==='econtract') cons.push('eContract has longer cycles — better for Q3+');
+
+  if (val>=4000&&val<=10000){sV=20;pros.push('Value in sweet spot ($4k–$10k)');}
+  else if (val>10000&&val<=25000){sV=16;pros.push('Strong value — higher effort but worth it');}
+  else if (val>25000){sV=10;cons.push('Over $25k — more compliance burden');}
+  else if (val>0&&val<4000){sV=8;cons.push('Under $4k target minimum');}
+  else if (val===0) sV=10;
+
+  const cm = {janitsupplies:20,uniforms:20,mro:17,janitservice:16,maintenance:13,other:8};
+  sC = cat ? (cm[cat]||10) : 0;
+  if (cat==='janitsupplies') pros.push('Easiest fulfillment — drop-ship ready');
+  if (cat==='uniforms') pros.push('Strong margin potential at 20–30%');
+  if (cat==='janitservice') pros.push('Recurring revenue potential');
+  if (cat==='maintenance') cons.push('Needs subcontractor lined up first');
+
+  if (margin==='high'){sM=20;pros.push('Margin 20%+: strong profit');}
+  else if (margin==='good'){sM=16;pros.push('Margin 15–20%: solid for EliteX');}
+  else if (margin==='low'){sM=8;cons.push('Margin under 15%: negotiate supplier cost');}
+  else if (margin==='poor'){sM=0;flags.push('Margin too low — do not bid as-is');}
+  else sM=12;
+
+  if (days>=5&&days<=14){sT=20;pros.push('Comfortable prep window');}
+  else if (days>=3&&days<5){sT=14;cons.push('Tight — start prep immediately');}
+  else if (days<3&&days>0){sT=6;flags.push('Very tight deadline — template must be ready');}
+  else if (days>=15){sT=18;pros.push('Good lead time — no rush');}
+  else sT=12;
+
+  if (setaside==='mwbe'){sS=10;pros.push('MWBE set-aside — EliteX has major edge');}
+  else if (setaside==='small'){sS=6;pros.push('Small business set-aside — you qualify');}
+  else sS=3;
+
+  if (bond==='bond'){flags.push('Performance bond required — skip until bonded');sT=Math.max(0,sT-8);}
+  if (bond==='no'||bond==='coi') pros.push('No bond required — cleared');
+  if (source==='no'){flags.push('Outside your categories — do not bid');sC=0;}
+  if (source==='unsure') cons.push('Confirm supplier before submitting');
+  if (source==='yes') pros.push('Supplier confirmed — ready to fulfill');
+
+  const total = Math.min(100, Math.round(sP+sV+sC+sM+sT+sS));
+  $('total-score').innerHTML = total + '<span style="font-size:12px;font-weight:400;color:#999">/100</span>';
+
+  const setBar = (id, bid, val, max) => {
+    $(id).textContent = Math.round(val);
+    const pct = Math.round((val/max)*100);
+    const b = document.getElementById('sb-'+bid);
+    b.style.width = pct+'%';
+    b.style.background = pct>=75?'#1D6F42':pct>=50?'#7d5a00':'#C00000';
+  };
+  if(portal) setBar('sc-portal','portal',sP,20); else $('sc-portal').textContent='—';
+  if(val>0) setBar('sc-value','value',sV,20); else $('sc-value').textContent='—';
+  if(cat) setBar('sc-cat','cat',sC,20); else $('sc-cat').textContent='—';
+  if(margin) setBar('sc-margin','margin',sM,20); else $('sc-margin').textContent='—';
+  if(days>0) setBar('sc-time','time',sT,20); else $('sc-time').textContent='—';
+  setBar('sc-set','set',sS,10);
+
+  if(!portal&&!cat&&val===0) return;
+
+  const vb = $('verdict-box');
+  vb.style.display = 'block';
+
+  let verdict, bg, tc, reason;
+  const hasCrit = flags.some(f=>f.includes('too low')||f.includes('Outside')||f.includes('bond required'));
+  if (hasCrit){verdict='No Bid';bg='#FCE4D6';tc='#843217';reason=flags[0];}
+  else if(total>=75){verdict='Strong Go';bg='#E2EFDA';tc='#1D6F42';reason='Great fit for EliteX. Prioritize this week.';}
+  else if(total>=55){verdict='Go — with conditions';bg='#FFF2CC';tc='#7d5a00';reason='Viable. Address flagged items before submitting.';}
+  else if(total>=35){verdict='Low priority';bg='#EBF3FB';tc='#0C447C';reason='Weak fit. Pursue only if pipeline is thin.';}
+  else{verdict='Pass';bg='#F2F2F2';tc='#595959';reason='Poor fit or insufficient info. Skip it.';}
+
+  vb.style.background=bg;
+  $('v-label').textContent=verdict;
+  $('v-label').style.color=tc;
+  $('v-score').textContent='Score: '+total+'/100 — '+reason;
+  $('v-score').style.color=tc;
+
+  $('v-pros').innerHTML=pros.map(p=>`<div class="verdict-item" style="color:${tc}">${p}</div>`).join('');
+  $('v-cons').innerHTML=[...cons,...flags].map(c=>`<div class="verdict-item" style="color:${tc}">${c}</div>`).join('');
+  $('v-pro-title').textContent=pros.length?'Why bid':'';
+  $('v-pro-title').style.color=tc;
+  $('v-con-title').textContent=[...cons,...flags].length?'Watch out for':'';
+  $('v-con-title').style.color=tc;
+
+  const today=new Date();
+  const dueDate=days>0?new Date(today.getTime()+days*86400000).toLocaleDateString('en-US'):'TBD';
+  $('v-tracker').textContent=
+    'PIPELINE ROW:\nOpp #: [fill]\nPortal: '+(PORTAL_LABELS[portal]||'—')+
+    '\nCategory: '+(CAT_LABELS[cat]||'—')+
+    '\nEst. Value: '+(val?'$'+val.toLocaleString():'—')+
+    '\nDue: '+dueDate+
+    '\nStatus: '+(verdict.includes('Go')?'To Research':'No Bid')+
+    '\nScore: '+total+'/100 — '+verdict;
+
+  const acts = $('v-actions');
+  acts.innerHTML='';
+  if(verdict.includes('Go')){
+    const b1=document.createElement('button');
+    b1.className='btn primary';b1.textContent='Write this proposal ↗';
+    b1.onclick=()=>sendPrompt('Help me write a proposal for EliteX. Portal: '+(PORTAL_LABELS[portal]||'')+', Category: '+(CAT_LABELS[cat]||'')+', Value: $'+val+', Details: '+details);
+    acts.appendChild(b1);
+    const b2=document.createElement('button');
+    b2.className='btn';b2.textContent='Add to pipeline ↗';
+    b2.onclick=()=>{
+      showPage('pipeline');
+      $('p-portal').value=PORTAL_LABELS[portal]||'Other';
+      $('p-cat').value=CAT_LABELS[cat]||'Other';
+      if(val) $('p-val').value=val;
+      $('p-desc').value=details.slice(0,80);
+      if(days>0){const d=new Date();d.setDate(d.getDate()+days);$('p-due').value=d.toISOString().slice(0,10);}
+      setTimeout(()=>$('add-form').scrollIntoView({behavior:'smooth'}),100);
+    };
+    acts.appendChild(b2);
+  }
+  const b3=document.createElement('button');
+  b3.className='btn';b3.textContent='Ask about this opp ↗';
+  b3.onclick=()=>sendPrompt('I have a government contract opportunity for EliteX: '+(PORTAL_LABELS[portal]||'')+', '+(CAT_LABELS[cat]||'')+', $'+val+'. '+details+' What should I know before bidding?');
+  acts.appendChild(b3);
+}
+
+// ── PIPELINE ──────────────────────────────────────────────────────────────
+
+function addOpp() {
+  const num=$('p-num').value.trim()||'OPP-'+state.nextId;
+  const portal=$('p-portal').value;
+  const desc=$('p-desc').value.trim();
+  const cat=$('p-cat').value;
+  const val=parseFloat($('p-val').value)||null;
+  const due=$('p-due').value;
+  const status=$('p-status').value;
+  const cost=parseFloat($('p-cost').value)||null;
+  const bid=parseFloat($('p-bid').value)||null;
+  const co=$('p-co').value.trim();
+  const notes=$('p-notes').value.trim();
+
+  state.opps.push({id:state.nextId++,num,portal,desc,cat,val,due,status,cost,bid,co,notes,added:new Date().toISOString()});
+  saveState();
+  renderPipeline();
+  renderDashboard();
+  clearPipelineForm();
+  toast('Opportunity added to pipeline');
+}
+
+function clearPipelineForm(){
+  ['p-num','p-desc','p-val','p-due','p-cost','p-bid','p-co','p-notes'].forEach(id=>$(id).value='');
+}
+
+function deleteOpp(id) {
+  state.opps = state.opps.filter(o=>o.id!==id);
+  saveState(); renderPipeline(); renderDashboard(); renderWinLoss();
+  toast('Removed');
+}
+
+function updateStatus(id, val) {
+  const o = state.opps.find(o=>o.id===id);
+  if(o){o.status=val;saveState();renderDashboard();renderWinLoss();}
+}
+
+function renderPipeline() {
+  const filterStatus = $('filter-status').value;
+  const filterPortal = $('filter-portal').value;
+  let opps = state.opps.filter(o=>{
+    if(filterStatus&&o.status!==filterStatus) return false;
+    if(filterPortal&&o.portal!==filterPortal) return false;
+    return true;
+  });
+
+  const tbody = $('pipeline-tbody');
+  if(!opps.length){tbody.innerHTML=`<tr><td colspan="14" class="empty-state">No opportunities yet — add one above.</td></tr>`;return;}
+
+  tbody.innerHTML = opps.map(o=>{
+    const days=daysLeft(o.due);
+    const daysClass=days===null?'':(days<4?'days-red':days<8?'days-amber':'days-green');
+    const daysDisplay=days===null?'—':(days<0?'Overdue':days+'d');
+    const margin=(o.cost&&o.bid&&o.bid>0)?((o.bid-o.cost)/o.bid*100):null;
+    const mClass=margin===null?'':(margin<15?'margin-low':margin<20?'margin-ok':'margin-good');
+    const mDisplay=margin===null?'—':Math.round(margin)+'%';
+    const sClass={
+      'To Research':'s-research','Researching':'s-research',
+      'Bid Submitted':'s-submitted','Won':'s-won','Lost':'s-lost','No Bid':'s-nobid'
+    }[o.status]||'s-research';
+    return `<tr>
+      <td style="font-weight:600;color:var(--navy)">${o.num}</td>
+      <td>${o.portal}</td>
+      <td style="max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${o.desc}">${o.desc||'—'}</td>
+      <td>${o.cat}</td>
+      <td style="font-weight:600">${o.val?'$'+Math.round(o.val).toLocaleString():'—'}</td>
+      <td>${o.due||'—'}</td>
+      <td class="${daysClass}">${daysDisplay}</td>
+      <td><select style="padding:3px 6px;border:1px solid #ddd;border-radius:4px;font-size:11px" onchange="updateStatus(${o.id},this.value)">
+        ${['To Research','Researching','Bid Submitted','Won','Lost','No Bid'].map(s=>`<option${s===o.status?' selected':''}>${s}</option>`).join('')}
+      </select></td>
+      <td>${o.cost?'$'+Math.round(o.cost).toLocaleString():'—'}</td>
+      <td>${o.bid?'$'+Math.round(o.bid).toLocaleString():'—'}</td>
+      <td class="${mClass}">${mDisplay}</td>
+      <td style="font-size:11px;max-width:120px;overflow:hidden;text-overflow:ellipsis" title="${o.co}">${o.co||'—'}</td>
+      <td style="font-size:11px;max-width:140px;overflow:hidden;text-overflow:ellipsis;color:#888" title="${o.notes}">${o.notes||'—'}</td>
+      <td><button class="btn sm danger" onclick="deleteOpp(${o.id})">✕</button></td>
+    </tr>`;
+  }).join('');
+}
+
+// ── DASHBOARD ──────────────────────────────────────────────────────────────
+
+function renderDashboard() {
+  const active = state.opps.filter(o=>!['Won','Lost','No Bid'].includes(o.status)).length;
+  const submitted = state.opps.filter(o=>o.status==='Bid Submitted').length;
+  const won = state.opps.filter(o=>o.status==='Won');
+  const revenue = won.reduce((s,o)=>s+(o.bid||0),0);
+  const total = state.opps.filter(o=>['Won','Lost'].includes(o.status)).length;
+  const wr = total ? Math.round(won.length/total*100)+'%' : '—';
+
+  $('d-active').textContent=active;
+  $('d-submitted').textContent=submitted;
+  $('d-revenue').textContent=fmtMoney(revenue);
+  $('d-winrate').textContent=wr;
+
+  const soon = state.opps.filter(o=>{
+    const d=daysLeft(o.due);
+    return d!==null&&d>=0&&d<=7&&!['Won','Lost','No Bid'].includes(o.status);
+  }).sort((a,b)=>daysLeft(a.due)-daysLeft(b.due));
+
+  const el = $('due-soon-list');
+  if(!soon.length){el.innerHTML='<div class="empty-state">No deadlines in the next 7 days.</div>';return;}
+  el.innerHTML=soon.map(o=>{
+    const d=daysLeft(o.due);
+    const dc=d<4?'#C00000':d<8?'#7d5a00':'#1D6F42';
+    return `<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid #f0f0f0">
+      <div>
+        <div style="font-weight:600;font-size:13px">${o.num} — ${o.desc||o.cat}</div>
+        <div style="font-size:11px;color:#888;margin-top:2px">${o.portal} · ${o.val?'$'+Math.round(o.val).toLocaleString():''}</div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-weight:700;color:${dc};font-size:14px">${d===0?'Due today':d+'d left'}</div>
+        <div style="font-size:11px;color:#888">${o.due}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── REVENUE ──────────────────────────────────────────────────────────────
+
+function renderRevenue() {
+  const GOAL = 50000;
+  const total = MONTHS.reduce((s,m)=>s+(parseFloat(state.revenue[m])||0),0);
+  const pct = Math.round((total/GOAL)*100);
+  const monthNum = new Date().getMonth()+1;
+  const expectedByNow = (GOAL/12)*monthNum;
+  const onTrack = total >= expectedByNow*0.8;
+
+  $('rev-total').textContent = fmtMoney(total);
+  $('rev-remaining').textContent = fmtMoney(Math.max(0,GOAL-total));
+  $('rev-pct').textContent = pct+'%';
+  $('rev-track').textContent = total===0?'—':(onTrack?'On track':'Behind');
+  $('rev-track').style.color = total===0?'#999':(onTrack?'#7ab3d9':'#ff9999');
+  $('prog-label').textContent = fmtMoney(total)+' of '+fmtMoney(GOAL);
+  $('prog-pct').textContent = pct+'%';
+  $('progress-fill').style.width = Math.min(100,pct)+'%';
+
+  const grid = $('month-grid');
+  grid.innerHTML = MONTHS.map(m=>{
+    const v = parseFloat(state.revenue[m])||0;
+    return `<div class="month-card">
+      <div class="month-name">${m.slice(0,3)}</div>
+      <div class="month-revenue">${v?'$'+Math.round(v).toLocaleString():'—'}</div>
+      <input class="month-input" type="number" placeholder="Enter revenue" value="${v||''}"
+        onchange="setRevenue('${m}',this.value)" style="margin-top:6px"/>
+    </div>`;
+  }).join('');
+}
+
+function setRevenue(month, val) {
+  state.revenue[month] = parseFloat(val)||0;
+  saveState();
+  renderRevenue();
+  renderDashboard();
+}
+
+// ── WIN/LOSS ──────────────────────────────────────────────────────────────
+
+function renderWinLoss() {
+  const relevant = state.opps.filter(o=>['Won','Lost'].includes(o.status));
+  const wins = relevant.filter(o=>o.status==='Won').length;
+  const losses = relevant.filter(o=>o.status==='Lost').length;
+  const wr = relevant.length ? Math.round(wins/relevant.length*100)+'%' : '—';
+
+  $('wl-total').textContent=relevant.length;
+  $('wl-wins').textContent=wins;
+  $('wl-losses').textContent=losses;
+  $('wl-rate').textContent=wr;
+
+  const tbody=$('wl-tbody');
+  if(!relevant.length){tbody.innerHTML=`<tr><td colspan="8" class="empty-state">No completed bids yet. Update statuses in the Pipeline tab.</td></tr>`;return;}
+  tbody.innerHTML=relevant.map(o=>{
+    const margin=(o.cost&&o.bid)?Math.round((o.bid-o.cost)/o.bid*100):null;
+    const sClass=o.status==='Won'?'s-won':'s-lost';
+    return `<tr>
+      <td>${o.portal}</td>
+      <td>${o.desc||'—'}</td>
+      <td>${o.cat}</td>
+      <td><span class="status-pill ${sClass}">${o.status}</span></td>
+      <td>${o.bid?'$'+Math.round(o.bid).toLocaleString():'—'}</td>
+      <td>${margin!==null?margin+'%':'—'}</td>
+      <td style="font-size:11px">${o.co||'—'}</td>
+      <td style="font-size:11px;color:#888">${o.notes||'—'}</td>
+    </tr>`;
+  }).join('');
+}
+
+function renderAll(){renderDashboard();renderPipeline();renderRevenue();renderWinLoss();}
+
+// ── WEEKLY PLANNER ────────────────────────────────────────────────────────
+
+// impact: 'high' = must do, 'medium' = do if time allows, 'low' = skip if busy
+const DEFAULT_WEEK_TASKS = [
+  {day:'Monday',    title:'Check PHA + PHLContracts — find 2 open RFQs',       detail:'Search janitorial supplies, uniforms, MRO. Note solicitation #, value, due date. MWBE set-asides on PHLContracts are priority.',  tag:'bid',   hrs:0.75, impact:'high', hot:true},
+  {day:'Monday',    title:'Screen each opp — add 65+ scorers to pipeline',     detail:'Open Screener tab → score each opp → add 65+ to Pipeline. 10 min max per opp. Do not overthink it — the score tells you.',           tag:'bid',   hrs:0.25, impact:'high'},
+  {day:'Tuesday',   title:'Get supplier pricing for your best opportunity',    detail:'Grainger.com or HDSupply.com → match every line item → calculate margin. Only proceed if 15%+. Drop the numbers here and I\'ll help you price it.',  tag:'bid',   hrs:0.75, impact:'high', hot:true},
+  {day:'Wednesday', title:'Draft + submit your proposal',                      detail:'Open proposal template → fill brackets → attach cap statement → submit. Drop solicitation details in chat first and I\'ll help you write it fast.',  tag:'bid',   hrs:1.0, impact:'high', hot:true},
+  {day:'Wednesday', title:'Send one-line follow-up email to the CO',           detail:'"EliteX, LLC submitted our quote for Solicitation #XXXX. Woman/minority-owned small business in Philadelphia. Reach me at (267) 250-6618."',  tag:'bid',   hrs:0.1,  impact:'high'},
+  {day:'Thursday',  title:'Check School District + PA eMarketplace',           detail:'Search NAICS 561720, 561210, 423850. Screen anything promising. Skip if you already have 3+ opps in pipeline — pipeline full = focus on submitting.',  tag:'bid',   hrs:0.5,  impact:'high'},
+  {day:'Friday',    title:'5-min pipeline update — statuses + follow-ups only',detail:'Update Pipeline statuses. Set CO follow-up dates. Hard stop at 15 minutes. This is admin — do it fast and move on.',  tag:'admin', hrs:0.25, impact:'medium'},
+  {day:'Weekend',   title:'Get your Certificate of Insurance (COI)',           detail:'nextinsurance.com or hiscox.com → general liability $1M min → ~$50–80/mo. Do this ONCE and you\'re set. Missing COI at submission disqualifies you silently — this is a revenue blocker.',  tag:'cert',  hrs:0.75, impact:'high', hot:true},
+  {day:'Weekend',   title:'Start PA Small Diverse Business (SDB) application', detail:'paucp.com → create account → begin application. Takes 60–90 days — every week you wait is a week you can\'t access PA set-aside contracts. Spend 45 min, just get it started.',  tag:'cert',  hrs:0.75, impact:'high', hot:true},
+  {day:'Weekend',   title:'Screen one more opportunity',                       detail:'One portal you didn\'t hit this week. Score it. Add to pipeline if 65+. Keeps bid volume up without eating your weekend.',  tag:'bid',   hrs:0.5,  impact:'high'},
+];
+
+function getWeekKey(date) {
+  const d = date || new Date();
+  const day = d.getDay();
+  const monday = new Date(d);
+  monday.setDate(d.getDate() - (day === 0 ? 6 : day - 1));
+  return monday.toISOString().slice(0,10);
+}
+
+function getWeekLabel(key) {
+  const start = new Date(key+'T12:00:00');
+  const end = new Date(start); end.setDate(start.getDate()+6);
+  const opts = {month:'short',day:'numeric'};
+  return 'Week of '+start.toLocaleDateString('en-US',opts)+' – '+end.toLocaleDateString('en-US',opts);
+}
+
+function initWeek(key) {
+  if (!state.weeks) state.weeks = {};
+  if (!state.weeks[key]) {
+    state.weeks[key] = {
+      tasks: DEFAULT_WEEK_TASKS.map((t,i) => ({
+        id: i, day:t.day, title:t.title, detail:t.detail,
+        tag:t.tag, hrs:t.hrs, hot:t.hot||false, impact:t.impact||'medium', done:false, custom:false
+      })),
+      nextCustomId: 100
+    };
+  }
+}
+
+function renderWeekly(filterHigh) {
+  const key = getWeekKey();
+  initWeek(key);
+  const week = state.weeks[key];
+  const allTasks = week.tasks;
+  const showHigh = filterHigh !== undefined ? filterHigh : (week.filterHigh !== undefined ? week.filterHigh : true);
+  week.filterHigh = showHigh;
+
+  const tasks = showHigh ? allTasks.filter(t => t.impact==='high' || t.hot || t.custom) : allTasks;
+
+  const doneAll = allTasks.filter(t=>t.done).length;
+  const totalAll = allTasks.length;
+  const hrsUsed = allTasks.filter(t=>t.done).reduce((s,t)=>s+t.hrs,0);
+  const hrsTot = allTasks.reduce((s,t)=>s+t.hrs,0);
+  const pct = totalAll ? Math.round(doneAll/totalAll*100) : 0;
+  const highCount = allTasks.filter(t=>t.impact==='high'||t.hot).length;
+  const highDone = allTasks.filter(t=>(t.impact==='high'||t.hot)&&t.done).length;
+
+  const container = $('page-weekly');
+  container.innerHTML = `
+  <div class="week-header">
+    <div class="week-title-row">
+      <div>
+        <div class="week-title">${getWeekLabel(key)}</div>
+        <div class="week-sub">6–8 hrs · ${highDone}/${highCount} high-impact done · focus on what moves the needle</div>
+      </div>
+      <div class="week-stats">
+        <div class="wk-stat"><div class="wk-num">${doneAll}/${totalAll}</div><div class="wk-lbl">Tasks done</div></div>
+        <div class="wk-stat"><div class="wk-num">${highDone}/${highCount}</div><div class="wk-lbl">High impact</div></div>
+        <div class="wk-stat"><div class="wk-num">${Math.round(hrsUsed*10)/10}h</div><div class="wk-lbl">Hours used</div></div>
+        <div class="wk-stat"><div class="wk-num">${Math.round((hrsTot-hrsUsed)*10)/10}h</div><div class="wk-lbl">Remaining</div></div>
+      </div>
+    </div>
+    <div class="week-prog-bg"><div class="week-prog-fill" style="width:${pct}%"></div></div>
+  </div>
+
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+    <div style="display:flex;gap:6px">
+      <button class="wk-filter-btn${showHigh?' active':''}" onclick="renderWeekly(true)" style="padding:6px 14px;border-radius:20px;font-size:12px;font-weight:500;cursor:pointer;border:1px solid ${showHigh?'#1F4E79':'#ddd'};background:${showHigh?'#1F4E79':'#fff'};color:${showHigh?'#fff':'#555'}">High impact only</button>
+      <button class="wk-filter-btn${!showHigh?' active':''}" onclick="renderWeekly(false)" style="padding:6px 14px;border-radius:20px;font-size:12px;font-weight:500;cursor:pointer;border:1px solid ${!showHigh?'#1F4E79':'#ddd'};background:${!showHigh?'#1F4E79':'#fff'};color:${!showHigh?'#fff':'#555'}">All tasks</button>
+    </div>
+    <div style="font-size:11px;color:#aaa">${showHigh?'Hiding "if time allows" tasks — unclutter your focus':'Showing all '+totalAll+' tasks including lower priority'}</div>
+  </div>
+
+  ${['Monday','Tuesday','Wednesday','Thursday','Friday','Weekend'].map(day => {
+    const dayTasks = tasks.filter(t=>t.day===day);
+    if(!dayTasks.length) return '';
+    const dayHrs = dayTasks.reduce((s,t)=>s+t.hrs,0);
+    const focus = {Monday:'Opportunity hunting',Tuesday:'Pricing & prep',Wednesday:'Submit bids',Thursday:'Research & follow-up',Friday:'Admin — 15 min max',Weekend:'COI · SDB cert · extra bid'}[day]||'';
+    return `<div class="day-section">
+      <div class="day-label-row">
+        <div class="day-name">${day}</div>
+        <div class="day-hrs-badge">${Math.round(dayHrs*10)/10}h</div>
+        <div class="day-focus-badge">${focus}</div>
+      </div>
+      ${dayTasks.map(t => `
+      <div class="wk-task${t.done?' done':''}" onclick="toggleWeekTask('${key}',${t.id})">
+        <div class="wk-cb${t.done?' on':''}">
+          ${t.done?'<svg width="10" height="10" viewBox="0 0 10 10" fill="none"><polyline points="1.5,5 4,7.5 8.5,2.5" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>':''}
+        </div>
+        <div class="wk-task-body">
+          <div class="wk-task-title">${t.title}</div>
+          ${t.detail?`<div class="wk-task-detail">${t.detail}</div>`:''}
+          <div class="wk-task-meta">
+            <span class="wk-tag tag-${t.tag}">${t.tag}</span>
+            ${t.hot?'<span class="wk-tag tag-hot">high impact</span>':''}
+            ${t.impact==='high'&&!t.hot?'<span class="wk-tag tag-bid" style="background:#E1F5EE;color:#085041">high impact</span>':''}
+            ${t.impact==='medium'?'<span class="wk-tag" style="background:#F2F2F2;color:#595959">if time allows</span>':''}
+            ${t.impact==='low'?'<span class="wk-tag" style="background:#F2F2F2;color:#aaa">low priority</span>':''}
+            <span class="wk-hrs">${t.hrs}h</span>
+          </div>
+        </div>
+        ${t.custom?`<button class="wk-delete" onclick="event.stopPropagation();deleteWeekTask('${key}',${t.id})">✕</button>`:''}
+      </div>`).join('')}
+      <div class="add-task-row">
+        <input id="new-task-${day}" placeholder="+ Add task for ${day}..." onkeydown="if(event.key==='Enter')addWeekTask('${key}','${day}')"/>
+        <select id="new-tag-${day}">
+          <option value="bid">bid</option>
+          <option value="admin">admin</option>
+          <option value="cert">cert</option>
+          <option value="setup">setup</option>
+        </select>
+        <button onclick="addWeekTask('${key}','${day}')">Add</button>
+      </div>
+    </div>`;
+  }).join('<hr style="border:none;border-top:0.5px solid var(--border);margin:14px 0"/>')}
+
+  <div class="card" style="margin-top:16px">
+    <div class="card-title">Past weeks</div>
+    <div class="week-history" id="week-history-list"></div>
+  </div>
+
+  <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">
+    <button class="btn" onclick="sendPrompt('Help me write my EliteX proposal this week')">Write this week\'s proposal ↗</button>
+    <button class="btn" onclick="sendPrompt('I found a new opportunity for EliteX this week:')">Found an opp ↗</button>
+    <button class="btn" onclick="resetWeek('${key}')">Reset this week</button>
+  </div>`;
+
+  renderWeekHistory(key);
+}
+
+function renderWeekHistory(currentKey) {
+  if (!state.weeks) return;
+  const el = $('week-history-list');
+  if(!el) return;
+  const keys = Object.keys(state.weeks).filter(k=>k!==currentKey).sort().reverse().slice(0,4);
+  if(!keys.length){el.innerHTML='<div style="font-size:12px;color:#aaa;padding:8px 0">No past weeks yet — completed weeks will appear here.</div>';return;}
+  el.innerHTML = keys.map(k=>{
+    const w = state.weeks[k];
+    const done = w.tasks.filter(t=>t.done).length;
+    const total = w.tasks.length;
+    const pct = total?Math.round(done/total*100):0;
+    return `<div class="hist-row">
+      <div class="hist-week">${getWeekLabel(k)}</div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <div class="hist-bar"><div class="hist-fill" style="width:${pct}%"></div></div>
+        <div class="hist-stats">${done}/${total} · ${pct}%</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function toggleWeekTask(key, id) {
+  const task = state.weeks[key].tasks.find(t=>t.id===id);
+  if(task){ task.done = !task.done; saveState(); renderWeekly(); }
+}
+
+function deleteWeekTask(key, id) {
+  state.weeks[key].tasks = state.weeks[key].tasks.filter(t=>t.id!==id);
+  saveState(); renderWeekly();
+}
+
+function addWeekTask(key, day) {
+  const inp = $('new-task-'+day);
+  const tagEl = $('new-tag-'+day);
+  const title = inp ? inp.value.trim() : '';
+  if(!title) return;
+  const tag = tagEl ? tagEl.value : 'bid';
+  const week = state.weeks[key];
+  week.tasks.push({
+    id: week.nextCustomId++, day, title, detail:'', tag,
+    hrs:0.5, hot:false, impact:'high', done:false, custom:true
+  });
+  saveState(); renderWeekly();
+  toast('Task added');
+}
+
+function resetWeek(key) {
+  if(!confirm('Reset all tasks for this week?')) return;
+  state.weeks[key].tasks.forEach(t=>t.done=false);
+  saveState(); renderWeekly();
+  toast('Week reset');
+}
+
+loadState();
+</script>
+</html>
