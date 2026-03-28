@@ -188,6 +188,10 @@ tbody td{padding:8px 10px;vertical-align:middle}
     <button class="nav-tab" onclick="showPage('weekly')">Weekly Plan</button>
   </div>
   <div class="save-status" id="save-status">Auto-saving</div>
+  <div style="display:flex;align-items:center;gap:6px">
+    <button onclick="exportData()" style="background:rgba(255,255,255,.12);border:none;color:rgba(255,255,255,.8);padding:5px 10px;border-radius:5px;font-size:11px;cursor:pointer">Export backup</button>
+    <label style="background:rgba(255,255,255,.12);border:none;color:rgba(255,255,255,.8);padding:5px 10px;border-radius:5px;font-size:11px;cursor:pointer">Import backup<input type="file" accept=".json" onchange="importData(event)" style="display:none"/></label>
+  </div>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -479,22 +483,61 @@ const MONTHS = ['January','February','March','April','May','June','July','August
 const PORTAL_LABELS = {pha:'PHA',phlcontracts:'PHLContracts',schooldistrict:'School District',paemarketplace:'PA eMarketplace',samgov:'SAM.gov Federal',econtract:'eContract Philly',other:'Other'};
 const CAT_LABELS = {janitsupplies:'Janitorial Supplies',uniforms:'Uniforms & Apparel',janitservice:'Janitorial Services',mro:'MRO / Facilities',maintenance:'Light Maintenance',other:'Other'};
 
-let state = { opps: [], revenue: {}, nextId: 1 };
+let state = { opps: [], revenue: {}, weeks: {}, nextId: 1 };
 
-async function loadState() {
+const STORAGE_KEY = 'elitex-business-manager-v1';
+
+function loadState() {
   try {
-    const r = await window.storage.get('elitex-state');
-    if (r && r.value) { state = JSON.parse(r.value); }
-  } catch(e) {}
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      state = { opps: [], revenue: {}, weeks: {}, nextId: 1, ...parsed };
+    }
+  } catch(e) {
+    console.error('Load error:', e);
+  }
   renderAll();
 }
 
-async function saveState() {
+function saveState() {
   try {
-    await window.storage.set('elitex-state', JSON.stringify(state));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
     const s = document.getElementById('save-status');
-    s.textContent = 'Saved ' + new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
-  } catch(e) {}
+    if (s) s.textContent = 'Saved ' + new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+  } catch(e) {
+    console.error('Save error:', e);
+    const s = document.getElementById('save-status');
+    if (s) s.textContent = 'Save failed — storage full?';
+  }
+}
+
+function exportData() {
+  const blob = new Blob([JSON.stringify(state, null, 2)], {type: 'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'EliteX_Backup_' + new Date().toISOString().slice(0,10) + '.json';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function importData(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      const imported = JSON.parse(e.target.result);
+      state = { opps: [], revenue: {}, weeks: {}, nextId: 1, ...imported };
+      saveState();
+      renderAll();
+      toast('Data imported successfully');
+    } catch(err) {
+      toast('Import failed — invalid file');
+    }
+  };
+  reader.readAsText(file);
 }
 
 function showPage(id) {
